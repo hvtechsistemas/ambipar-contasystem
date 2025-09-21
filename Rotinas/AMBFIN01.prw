@@ -76,7 +76,7 @@ Static Function GetDadosTitulos(nOpc)
         If !(cAlias)->(EOF()) .AND. !(cAlias)->(BOF())
             While   !(cAlias)->(EoF())
 
-                AADD(aTitulos,{(cAlias)->E2_FILIAL,(cAlias)->E2_NUM,(cAlias)->E2_PREFIXO,(cAlias)->E2_FORNECE,(cAlias)->E2_LOJA,(cAlias)->E2_VALOR,(cAlias)->RECSE2})
+                AADD(aTitulos,{.F.,(cAlias)->E2_FILIAL,(cAlias)->E2_NUM,(cAlias)->E2_PREFIXO,(cAlias)->E2_FORNECE,(cAlias)->E2_LOJA,(cAlias)->E2_VALOR,(cAlias)->RECSE2})
             
                 (cAlias)->(DBSkip())
             EndDo
@@ -102,7 +102,7 @@ Static Function GetDadosTitulos(nOpc)
         If !(cAlias)->(EOF()) .AND. !(cAlias)->(BOF())
             While   !(cAlias)->(EoF())
 
-                AADD(aTitulos,{(cAlias)->E1_FILIAL,(cAlias)->E1_NUM,(cAlias)->E1_PREFIXO,(cAlias)->E1_CLIENTE,(cAlias)->E1_LOJA,(cAlias)->E1_VALOR,(cAlias)->RECSE1})
+                AADD(aTitulos,{.F.,(cAlias)->E1_FILIAL,(cAlias)->E1_NUM,(cAlias)->E1_PREFIXO,(cAlias)->E1_CLIENTE,(cAlias)->E1_LOJA,(cAlias)->E1_VALOR,(cAlias)->RECSE1})
             
                 (cAlias)->(DBSkip())
             EndDo
@@ -138,9 +138,9 @@ Static Function TelaCtaPagar()
 	{|| SelectOne(oPedBrw, aTitulos)},; //Code-Block Double Click
 	{|| SelectAll(oPedBrw, 01, aTitulos) }) //Code-Block Header Click
 
-	oPedBrw:addColumn({"Filial"              , {||aTitulos[oPedBrw:nAt,01]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,06]",, .F., .T.,                                    , "ETDESPES1"    })
-	oPedBrw:addColumn({"Num. Doc"              , {||aTitulos[oPedBrw:nAt,02]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,02]",, .F., .T.,                                    , "ETDESPES1"    })
-	oPedBrw:addColumn({"Prefixo"              , {||aTitulos[oPedBrw:nAt,03]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,03]",, .F., .T.,                                    , "ETDESPES1"    })
+	oPedBrw:addColumn({"Filial"              , {||aTitulos[oPedBrw:nAt,02]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,06]",, .F., .T.,                                    , "ETDESPES1"    })
+	oPedBrw:addColumn({"Num. Doc"              , {||aTitulos[oPedBrw:nAt,03]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,02]",, .F., .T.,                                    , "ETDESPES1"    })
+	oPedBrw:addColumn({"Prefixo"              , {||aTitulos[oPedBrw:nAt,04]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,03]",, .F., .T.,                                    , "ETDESPES1"    })
 
 	oPedBrw:setEditCell( .T. , { || .T. } ) //activa edit and code block for validation
 
@@ -150,6 +150,38 @@ Static Function TelaCtaPagar()
 
 
 Return
+
+
+//Função para consultar os pedidos que o usuario marcou
+
+Static Function ConsultaItens(aDados)
+	Local _ni := 1
+
+	For _ni := 1 to len(aDados)
+		If aDados[_ni,1]
+            //Marcados
+
+		Endif
+	Next
+
+	o3Dlg:End()
+
+Return .T.
+
+Static Function SelectOne(oBrowse, aArquivo)
+aArquivo[oPedBrw:nAt,1] := !aArquivo[oPedBrw:nAt,1]
+oBrowse:Refresh()
+Return .T.
+
+
+Static Function SelectAll(oBrowse, nCol, aArquivo)
+Local _ni := 1
+For _ni := 1 to len(aArquivo)
+    aArquivo[_ni,1] := lMarker
+Next
+oBrowse:Refresh()
+lMarker:=!lMarker
+Return .T.
 
 /*
     Função para montar tela markbrowse com dados do contas a receber 
