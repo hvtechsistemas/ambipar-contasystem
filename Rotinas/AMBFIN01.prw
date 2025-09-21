@@ -112,6 +112,47 @@ Static Function GetDadosTitulos(nOpc)
 
 Return
 
+
+/*
+    Função para montar tela markbrowse com dados do contas a pagar 
+*/
+
+Static Function TelaCtaReceber()
+
+    DEFINE MsDIALOG o3Dlg TITLE 'Seleção de Titulos' From 0, 4 To 550, 980 Pixel
+
+	oPnMaster := tPanel():New(0,0,,o3Dlg,,,,,,0,0)
+	oPnMaster:Align := CONTROL_ALIGN_ALLCLIENT
+
+	oPedBrw := fwBrowse():New()
+	oPedBrw:setOwner( oPnMaster )
+
+	oPedBrw:setDataArray()
+	oPedBrw:setArray( aTitulos )
+	oPedBrw:disableConfig()
+	oPedBrw:disableReport()
+
+	oPedBrw:SetLocate() // Habilita a Localização de registros
+
+	//Create Mark Column
+	oPedBrw:AddMarkColumns({|| IIf(aTitulos[oPedBrw:nAt,01], "LBOK", "LBNO")},; //Code-Block image
+	{|| SelectOne(oPedBrw, aTitulos)},; //Code-Block Double Click
+	{|| SelectAll(oPedBrw, 01, aTitulos) }) //Code-Block Header Click
+
+	oPedBrw:addColumn({"Filial"              , {||aTitulos[oPedBrw:nAt,02]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,02]",, .F., .T.,                                    , "ETDESPES1"    })
+	oPedBrw:addColumn({"Num. Doc"              , {||aTitulos[oPedBrw:nAt,03]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,03]",, .F., .T.,                                    , "ETDESPES1"    })
+	oPedBrw:addColumn({"Prefixo"              , {||aTitulos[oPedBrw:nAt,04]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,04]",, .F., .T.,                                    , "ETDESPES1"    })
+    oPedBrw:addColumn({"Recno"              , {||aTitulos[oPedBrw:nAt,08]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,08]",, .F., .T.,                                    , "ETDESPES1"    })
+
+	oPedBrw:setEditCell( .T. , { || .T. } ) //activa edit and code block for validation
+
+	oPedBrw:Activate(.T.)
+
+	ACTIVATE MSDIALOG o3Dlg CENTERED  ON INIT (EnchoiceBar(o3Dlg,{|| (lConfirmed := CONFIRMED , ProcTransf(aTitulos,2)) },{||(lConfirmed := CANCELED , o3Dlg:End() )},,))
+
+
+Return
+
 /*
     Função para montar tela markbrowse com dados do contas a pagar 
 */
@@ -147,7 +188,7 @@ Static Function TelaCtaPagar()
 
 	oPedBrw:Activate(.T.)
 
-	ACTIVATE MSDIALOG o3Dlg CENTERED  ON INIT (EnchoiceBar(o3Dlg,{|| (lConfirmed := CONFIRMED , ConsultaItens(aTitulos)) },{||(lConfirmed := CANCELED , o3Dlg:End() )},,))
+	ACTIVATE MSDIALOG o3Dlg CENTERED  ON INIT (EnchoiceBar(o3Dlg,{|| (lConfirmed := CONFIRMED , ProcTransf(aTitulos,1)) },{||(lConfirmed := CANCELED , o3Dlg:End() )},,))
 
 
 Return
@@ -155,21 +196,34 @@ Return
 
 //Função para consultar os pedidos que o usuario marcou
 
-Static Function ConsultaItens(aDados)
+Static Function ProcTransf(aDados,nOpc)
 	Local _ni := 1
 
 	For _ni := 1 to len(aDados)
 		If aDados[_ni,1]
             //Marcados
+            If nOpc == 1 //Cta a Pagar
+                nRecTitulo := aDados[_ni,8]
+                SE2->(dbGoto(nRecTitulo))
 
-            nRecTitulo := aDados[_ni,8]
-            SE2->(dbGoto(nRecTitulo))
+                cFilDest := MV_PAR02
+                cCliFor := SE2->E2_FORNECE
+                cLojCliFor := SE2->E2_LOJA
 
-            cFilDest := MV_PAR02
-            cCodForn := SE2->E2_FORNECE
-            cLOjaFor := SE2->E2_LOJA
+                TranfSE2(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
+            Else 
+                //Cta a Receber
 
-            TranfSE2(nRecTitulo,cFilDest,cCodForn,cLOjaFor)
+                nRecTitulo := aDados[_ni,8]
+                SE1->(dbGoto(nRecTitulo))
+
+                cFilDest := MV_PAR02
+                cCliFor := SE1->E1_CLIENTE
+                cLojCliFor := SE1->E1_LOJA
+
+                TranfSE1(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
+
+            Endif
 
 		Endif
 	Next
@@ -178,7 +232,8 @@ Static Function ConsultaItens(aDados)
 
 Return .T.
 
-Static function TranfSE2(nRecTitulo,cFilDest,cCodForn,cLOjaFor)
+
+Static function TranfSE1(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
     Local aCab        := {}
  
     Private lMsErroAuto := .F.
@@ -186,8 +241,33 @@ Static function TranfSE2(nRecTitulo,cFilDest,cCodForn,cLOjaFor)
     SE2->(dbGoto(nRecTitulo))
  
     aadd(aCab, {"E6_FILDEB",cFilDest})
-    aadd(aCab, {"E6_CLIENTE",cCodForn})
-    aadd(aCab, {"E6_LOJA",cLOjaFor})
+    aadd(aCab, {"E6_CLIENTE",cCliFor})
+    aadd(aCab, {"E6_LOJA",cLojCliFor})
+    aadd(aCab, {"AUTHISTDEB","solicitado pelo FINA621 via execauto."})
+
+    //Inclusao de Solicitação de transferencia
+    MSExecAuto({|a, b| FINA620(a,b)}, aCab,3)
+
+    If lMsErroAuto
+        //mostraerro() //Se for usado em interface
+        conout('erro na inclusao')
+    Else
+        //MsgStop("Processo realizado com sucesso.") // Se for usado em interface
+        conout('Processo realizado com sucesso.')
+    EndIf
+
+Return
+
+Static function TranfSE2(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
+    Local aCab        := {}
+ 
+    Private lMsErroAuto := .F.
+ 
+    SE2->(dbGoto(nRecTitulo))
+ 
+    aadd(aCab, {"E6_FILDEB",cFilDest})
+    aadd(aCab, {"E6_CLIENTE",cCliFor})
+    aadd(aCab, {"E6_LOJA",cLojCliFor})
     aadd(aCab, {"AUTHISTDEB","solicitado pelo FINA621 via execauto."})
 
     //Inclusao de Solicitação de transferencia
@@ -217,15 +297,4 @@ Next
 oBrowse:Refresh()
 lMarker:=!lMarker
 Return .T.
-
-/*
-    Função para montar tela markbrowse com dados do contas a receber 
-*/
-
-Static Function TelaCtaReceber()
-
-    
-
-Return
-
 
