@@ -140,7 +140,7 @@ Static Function ProcTransf(aDados,nOpc)
                     If cFilDest == cFilAnt
                         SE6->(dbGoto(nRecTransf))
                         //Aprova a Transf
-                        Fa630Apv()
+
                     Else 
                         MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
                     Endif
