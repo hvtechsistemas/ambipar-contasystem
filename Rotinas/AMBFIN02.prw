@@ -6,9 +6,6 @@
 #INCLUDE 'FWMVCDEF.CH'
 #INCLUDE "FWEditPanel.CH"
 
-#DEFINE CONFIRMED			.T.
-#DEFINE CANCELED			.F.
-
 Static _lCpoEnt05 //Entidade 05
 Static _lCpoEnt06 //Entidade 06
 Static _lCpoEnt07 //Entidade 07
@@ -453,14 +450,14 @@ If nOpcA == 1
 								F631SemImp(@aTit) 
 								aTit[nX][2] := fNatTrf(SE6->E6_FILDEB)
 								If Empty(aTit[nX][2])
-									aTit[nX][2] := GetNewPar("ZZ_NATTRF","10907")
+									aTit[nX][2] := GetNewPar("ZZ_NATTRF","10907") //fNatNTrf(cFilAnt, aTit)
 								Endif	
 							Else
 								aTit[nX][2] := SE2->E2_NATUREZ
 							EndIf
 						Else //MV_IMPTRAN = 2
 							If !Empty(FWFilial("SED"))
-								aTit[nX][2] := GetNewPar("ZZ_NATTRF","10907")
+								aTit[nX][2] := GetNewPar("ZZ_NATTRF","10907") //fNatNTrf(cFilAnt, aTit)
 							Else
 								aTit[nX][2] := SE2->E2_NATUREZ
 							Endif
@@ -1064,3 +1061,80 @@ Static Function F631SemImp(aTit As Array)
 
 Return 
 
+/*/ {Protheus.doc} fNatNTrf
+Informar natureza no momento da transferencia entre filiais.
+            
+@author Caique
+@version P11
+@since 12/01/2015
+@return Nil
+@obs.
+@sample 
+/*/
+
+Static Function fNatNTrf(cFilTransf,aTit)
+
+Local aArea     := GetArea()
+Local cNewNatTr := ""
+Local nVar		:= ""
+Local oDlg		:= NIL
+
+Default cFilTransf := cFilAnt
+Default aTit := {}
+
+DbSelectArea("SED")
+
+Private cCodNat := SPACE(LEN(SED->ED_CODIGO))
+Private cNomNat:= SPACE(LEN(SED->ED_DESCRIC))
+Private cObserv := "--------------------------------------"+CRLF
+
+cObserv += "------> Impostos do Título <------"+CRLF
+cObserv += "--------------------------------------"+CRLF
+
+If lImp
+	If (nVar := SE2->E2_IRRF ) > 0 
+		cObserv += "IRRF =    "+ TransForm(nVar,PesqPict('SE2',"E2_VALOR"))+CRLF
+	EndIf
+	If (nVar := SE2->E2_COFINS) > 0 
+		cObserv += "COFINS = "+ TransForm(nVar,PesqPict('SE2',"E2_VALOR"))+CRLF
+	EndIf
+	If (nVar := SE2->E2_CSLL) > 0 
+		cObserv += "CSLL =    "+ TransForm(nVar,PesqPict('SE2',"E2_VALOR"))+CRLF
+	EndIF
+	If (nVar := SE2->E2_PIS ) > 0 
+		cObserv += "PIS =    "+ TransForm(nVar,PesqPict('SE2',"E2_VALOR"))+CRLF
+	EndIf
+	If __lMunic
+		If (nVar := SE2->(E2_ISS) ) > 0 
+			cObserv += "ISS =    "+ TransForm(nVar,PesqPict('SE2',"E2_VALOR"))+CRLF
+		EndIf
+		If (nVar := SE2->(E2_PRISS) ) > 0 
+			cObserv += "ISS PROV. =    "+ TransForm(nVar,PesqPict('SE2',"E2_VALOR"))+CRLF
+		EndIf
+	Endif	
+	If (nVar := SE2->(E2_INSS) ) > 0 
+		cObserv += "INSS =    "+ TransForm(nVar,PesqPict('SE2',"E2_VALOR"))+CRLF
+	EndIf
+	If (nVar := SE2->(E2_PRINSS) ) > 0 
+		cObserv += "INSS PROV. =    "+ TransForm(nVar,PesqPict('SE2',"E2_VALOR"))+CRLF
+	EndIf
+Endif
+
+DEFINE MSDIALOG oDlg TITLE "Natureza - Filial Destino" FROM 100,250  TO 400,750 OF oMainWnd PIXEL Style 128
+	@ 10, 10 TO 130,240 of oDlg PIXEL
+	@ 20, 020 SAY " Natureza....: " SIZE 70,10 of oDlg PIXEL 	
+	@ 20, 060 MSGET cCodNat F3 "SED"  VALID ValNat(aTit) SIZE 40,10 PIXEL HASBUTTON
+	@ 20, 110 MSGET cNomNat WHEN .F. SIZE 70,10 PIXEL
+
+	@ 40, 020 SAY "Observações: " SIZE 70,10 of oDlg PIXEL 
+	oTMultiget := tMultiget():new( 40, 60, {| u | if( pCount() > 0, cObserv := u, cObserv ) }, ;
+    oDlg, 120, 60, , , , , , .T. )
+    oTMultiget:EnableVScroll( .T. )
+    oTMultiget:lReadOnly := .T.
+  	@ 20, 200 BUTTON "OK" VALID FnatTudOk(oDlg) SIZE 030, 020 PIXEL OF oDlg ACTION (cNewNatTr := cCodNat, oDlg:End())
+	oDlg:lEscClose     := .F. //Nao permite sair ao se pressionar a tecla ESC.
+ACTIVATE MSDIALOG oDlg 
+
+RestArea(aArea)
+
+Return(cNewNatTr)

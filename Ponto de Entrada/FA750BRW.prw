@@ -5,6 +5,7 @@
 User Function FA750BRW()
 	private aRet := {}
 
-	AADD( aRet, { "Transf. Titulos"		    , "U_AMBFIN01(1)",	      0 , 6})
+	AADD( aRet, { "Transf. Pagar"		    , "U_TRFCTAPAGAR()",	      0 , 6})
+	AADD( aRet, { "Transf. Receber"		    , "U_TRFCTASRECEBER()",	      0 , 6})
 
 return(aRet)

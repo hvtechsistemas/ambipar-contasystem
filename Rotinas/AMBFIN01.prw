@@ -20,6 +20,19 @@ Função para Transferencia de Titulos entre filiais
 @version 1.0
 /*/
 
+//Chamada em Menu
+User Function TRFCTAPAGAR()
+
+    U_AMBFIN01(1)
+
+Return
+
+//Chamada em Menu
+User Function TRFCTASRECEBER()
+
+    U_AMBFIN01(2)
+
+Return
 
 User Function AMBFIN01(nOpc)
     Local aPergs := {}
@@ -28,7 +41,7 @@ User Function AMBFIN01(nOpc)
 
     aAdd(aPergs ,{1,"Filial De: ", Space(TamSX3("E1_FILIAL")[1]) , PesqPict("SE1","E1_FILIAL"), '', '', '.T.', 60, .T.})
     aAdd(aPergs ,{1,"Filial Para: ", Space(TamSX3("E1_FILIAL")[1]) , PesqPict("SE1","E1_FILIAL"), '', '', '.T.', 60, .T.})
-    aAdd(aPergs ,{1,"Titulo De: ", Space(TamSX3("E1_NUM")[1]) , PesqPict("SE1","E1_NUM"), '', '', '.T.', 60, .T.})
+    aAdd(aPergs ,{1,"Titulo De: ", Space(TamSX3("E1_NUM")[1]) , PesqPict("SE1","E1_NUM"), '', '', '.T.', 60, .F.})
     aAdd(aPergs ,{1,"Titulo Ate: ", Space(TamSX3("E1_NUM")[1]) , PesqPict("SE1","E1_NUM"), '', '', '.T.', 60, .T.})
     aAdd(aPergs, {1,"Data De:", Ctod(Space(8)), "", ".T.", "", ".T.", 50, .T.})
     aAdd(aPergs, {1,"Data Até:", Ctod(Space(8)), "", ".T.", "", ".T.", 50, .T.})
@@ -140,7 +153,7 @@ Static Function ProcTransf(aDados,nOpc)
                     If cFilDest == cFilAnt
                         SE6->(dbGoto(nRecTransf))
                         //Aprova a Transf
-
+                        U_AMBFIN03("SE6",nRecTransf,4)
                     Else 
                         MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
                     Endif
