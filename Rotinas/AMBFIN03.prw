@@ -22,6 +22,7 @@ User Function AMBFIN03(cAlias,nReg,nOpc)
 	Private aIndexFil	:= {}
 	Private bFiltraBrw
 	Private cFilPad := ""
+	Private aRotAuto    := Nil
 	Private lExcSX5	:= FWModeAccess("SX5",3) == "E"
 
 	SE6->(dbGoto(nReg))
@@ -46,7 +47,7 @@ Static Function XFa630Apv(cAlias,nReg,nOpc)
 	Local cTitPai := ""
 	Local nY := 0
 	Local cParcela	:= Space(TamSx3("E1_PARCELA")[1])
-	Local lSolicAb	:= (mv_par01==1)	// Apenas solicitacoes em aberto
+	Local lSolicAb	:= .T.
 	Local lDtMovFin := .T.
 	Local lRet		:= .F.
 	Local IsAuto	:= Type("lMsErroAuto")<>"U"
@@ -72,6 +73,8 @@ Static Function XFa630Apv(cAlias,nReg,nOpc)
 
 	Private lF630Auto := .T.
 
+	_cFilOld := cFilAnt
+
 	if lF630Auto
 		DbSelectArea("SE6")
 		DbSetorder(3)
@@ -82,15 +85,15 @@ Static Function XFa630Apv(cAlias,nReg,nOpc)
 
 	// Apenas solicitacoes em aberto podem ser aprovadas.
 	If SE6->E6_SITSOL != "1"
-		Help(" ",1,"FIN63004",,STR0021,1,0)
+		//Help(" ",1,"FIN63004",,STR0021,1,0)
 		Return .F.
 	Endif
 
 	// Nao eh permitido aprovar transferencias de titulos solicitados para
 	// outra filial.
 	If _cFilOld != SE6->E6_FILDEB
-		Help(" ",1,"FIN63006",,	STR0008 + SE6->E6_FILDEB + CHR(13)+; //"Transferência solicitada para filial: "
-		STR0009 + _cFilOld, 4 , 0 ) //"Filial atual: "
+		//Help(" ",1,"FIN63006",,	STR0008 + SE6->E6_FILDEB + CHR(13)+; //"Transferência solicitada para filial: "
+		//STR0009 + _cFilOld, 4 , 0 ) //"Filial atual: "
 		Return .F.
 	Endif
 
@@ -150,14 +153,14 @@ Static Function XFa630Apv(cAlias,nReg,nOpc)
 		
 
 		If lAltPref .And. !lF630Auto
-			aAdd(aMsg,STR0023)
-			aAdd(aMsg,STR0024)
-			aAdd(aMsg,STR0025)
-			aAdd(aMsg,STR0026)
-			aAdd(aMsg,STR0027)
-			aAdd(aMsg,STR0028)
+			//aAdd(aMsg,STR0023)
+			//aAdd(aMsg,STR0024)
+			//aAdd(aMsg,STR0025)
+			//aAdd(aMsg,STR0026)
+			//aAdd(aMsg,STR0027)
+			//aAdd(aMsg,STR0028)
 
-			FormBatch(STR0029,aMsg,{{1,.T.,{|| lExeFun := .T., FechaBatch()}}})
+			//FormBatch(STR0029,aMsg,{{1,.T.,{|| lExeFun := .T., FechaBatch()}}})
 		EndIf
 			
 
@@ -374,18 +377,19 @@ Static Function XFa630Apv(cAlias,nReg,nOpc)
 								cHist:=ExecBlock("F630HIST",.f.,.f.)
 								AADD(aTit , {"AUTHIST"		, cHist			,NIL})
 							Else
-								AADD(aTit , {"AUTHIST"		, STR0010 + SE6->E6_FILORIG + STR0011 + SE6->E6_FILDEB,NIL}) //"Bx. p/transf. da filial "###" p/"
+								AADD(aTit , {"AUTHIST"		, "Transferencia entre filial",NIL}) //"Bx. p/transf. da filial "###" p/"
 							EndIf
 							AADD(aTit , {"AUTVALREC"	, nSaldo				, NIL })
 							//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 							//³Executa a Baixa do Titulo                                         ³
 							//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+							lRet := .T.
 							If !IsAuto
 								MSExecAuto({|x, y| FINA070(x, y)}, aTit, 3)
 							Else
 								lRet	:= FINA070(aTit, 3)
 							Endif
-							If lMsErroAuto .or. !lRet
+							If lMsErroAuto //.or. !lRet
 								If lMsErroAuto
 									MostraErro()
 								EndIf
@@ -434,7 +438,7 @@ Static Function XFa630Apv(cAlias,nReg,nOpc)
 												cHist:=ExecBlock("F630HIST",.f.,.f.)
 												AADD(aTit , {"AUTHIST"		, cHist			,NIL})
 											Else
-												AADD(aTit , {"AUTHIST"		, STR0010 + SE6->E6_FILORIG + STR0011 + SE6->E6_FILDEB,NIL}) //"Bx. p/transf. da filial "###" p/"
+												AADD(aTit , {"AUTHIST"		, "Transferencia entre filial",NIL}) //"Bx. p/transf. da filial "###" p/"
 											EndIf
 											AADD(aTit , {"AUTVLRPG"	, SE2->E2_SALDO	, NIL })
 											//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
@@ -465,7 +469,7 @@ Static Function XFa630Apv(cAlias,nReg,nOpc)
 		Endif
 
 	//numbor			
-	aadd( aAlt,{ STR0030,'','','',STR0031 +  Alltrim(cFilOld) })
+	aadd( aAlt,{ '','','','',Alltrim(cFilOld) })
 	//chamada da Função que cria o Histórico de Cobrança
 	FinaCONC(aAlt)
 
@@ -655,18 +659,18 @@ Static Function ConfigSED(cNat)
 			EndIf
 		Next
 		If lSEDDif
-			MsgInfo(STR0036, STR0035)
-			If !MsgYesNo(STR0037, STR0035)
-				DEFINE MSDIALOG oDlg FROM	22,9 TO 130,310 TITLE STR0038 PIXEL  // "Natureza filial de destino"
+			//MsgInfo(STR0036, STR0035)
+			//If !MsgYesNo(STR0037, STR0035)
+				DEFINE MSDIALOG oDlg FROM	22,9 TO 130,310 TITLE "Natureza filial de destino" PIXEL  // "Natureza filial de destino"
 
 				@ 010, 050 MSGET cNatAux	F3 "SED" Valid Fa630Nat(cNatAux)      		SIZE 55, 11 OF oDlg PIXEL Hasbutton
-				@ 010, 020 SAY STR0039	OF oDlg PIXEL //"Natureza"
+				@ 010, 020 SAY "Natureza"	OF oDlg PIXEL //"Natureza"
 				@ 004, 007 TO 036, 150 OF oDlg PIXEL
 
 				DEFINE SBUTTON FROM 07, 120 TYPE 1 ACTION (nOpca:=1,cNat := cNatAux, oDlg:End()) ENABLE OF oDlg
 
 				ACTIVATE MSDIALOG oDlg CENTERED
-			EndIf
+			//EndIf
 		EndIf
 	EndIf
 
