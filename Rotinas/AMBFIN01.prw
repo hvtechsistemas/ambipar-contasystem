@@ -94,8 +94,6 @@ Static Function BrowseSelecTitulo(nOpc)
     oPedBrw:addColumn({"Valor"              , {||aTitulos[oPedBrw:nAt,07]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,07]",, .F., .T.,                                    , "ETDESPES1"    })
     oPedBrw:addColumn({"Recno"              , {||aTitulos[oPedBrw:nAt,08]}, "C", "@!"    , 0,  20    ,                            , .T. , , .F.,, "aTitulos[oPedBrw:nAt,08]",, .F., .T.,                                    , "ETDESPES1"    })
 
-	oPedBrw:setEditCell( .T. , { || .T. } ) //activa edit and code block for validation
-
 	oPedBrw:Activate(.T.)
 
 	ACTIVATE MSDIALOG o3Dlg CENTERED  ON INIT (EnchoiceBar(o3Dlg,{|| (lConfirmed := CONFIRMED , FWMsgRun(, {|| ProcTransf(aTitulos,nOpc)}, "Aguarde", "Processando Transferencia")) },{||(lConfirmed := CANCELED , o3Dlg:End() )},,))
@@ -259,6 +257,7 @@ Static Function GetDadosTitulos(nOpc)
         cQry += " AND SE2.E2_EMISSAO>='"+DTOS(MV_PAR05)+"'" 
         cQry += " AND SE2.E2_EMISSAO<='"+DTOS(MV_PAR06)+"'"
         cQry += " AND SE2.E2_BAIXA=' '" 
+        cQry += " AND SE2.E2_TIPO<>'PA'" 
 
         TcQuery cQry New Alias &cAlias
 
@@ -287,6 +286,7 @@ Static Function GetDadosTitulos(nOpc)
         cQry += " AND SE1.E1_EMISSAO>='"+DTOS(MV_PAR05)+"'" 
         cQry += " AND SE1.E1_EMISSAO<='"+DTOS(MV_PAR06)+"'"
         cQry += " AND SE1.E1_BAIXA=' '" 
+        cQry += " AND SE1.E1_TIPO<>'RA'"
 
         TcQuery cQry New Alias &cAlias
 
