@@ -2,9 +2,9 @@
 
 //Ponto de entrada adiciona botão no contas a receber
 
-User Function F040BROW()
+User Function FA740BRW()
 	private aRet := {}
 
-	AADD( aRet, { "Transf. Titulos"		    , "U_AMBFIN01(2)",	      0 , 6})
+	AADD( aRet, { "Transf. Filial"		    , "U_TRFCTASRECEBER()",	      0 , 6})
 
 return(aRet)
