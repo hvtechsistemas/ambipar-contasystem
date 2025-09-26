@@ -38,6 +38,10 @@ User Function AMBFIN01(nOpc)
     Local aPergs := {}
 
     Private aTitulos := {}
+    Private cFilDest := ""
+    Private cFilOrig := ""
+    Private cCNPJOrig := ""
+    Private cCNPJDest := ""
 
     aAdd(aPergs ,{1,"Filial De: ", Space(TamSX3("E1_FILIAL")[1]) , PesqPict("SE1","E1_FILIAL"), '', '', '.T.', 60, .T.})
     aAdd(aPergs ,{1,"Filial Para: ", Space(TamSX3("E1_FILIAL")[1]) , PesqPict("SE1","E1_FILIAL"), '', '', '.T.', 60, .T.})
@@ -49,11 +53,19 @@ User Function AMBFIN01(nOpc)
     lCanSave := .F.
     lUserSave := .T.
     If ParamBox(aPergs, "Filtros",,,,,,,,, lCanSave, lUserSave)
-        GetDadosTitulos(nOpc)
-        If Len(aTitulos) > 0
-            BrowseSelecTitulo(nOpc)
+        cFilOrig := MV_PAR01
+        cFilDest := MV_PAR02
+        cCNPJOrig := Alltrim(POSICIONE("SM0",1,cEmpAnt+MV_PAR01,"M0_CGC" ))
+        cCNPJDest := Alltrim(POSICIONE("SM0",1,cEmpAnt+MV_PAR02,"M0_CGC" ))
+        If !Empty(cCNPJOrig) .AND. !Empty(cCNPJDest)
+            GetDadosTitulos(nOpc)
+            If Len(aTitulos) > 0
+                BrowseSelecTitulo(nOpc)
+            Else 
+                MsgAlert("Dados não encontrados com os filtros informados!!!")
+            Endif
         Else 
-            MsgAlert("Dados não encontrados com os filtros informados!!!")
+            MsgAlert("Verifique as filiais informadas nos filtros!")
         Endif
     Endif
 
@@ -114,49 +126,71 @@ Static Function ProcTransf(aDados,nOpc)
                 nRecTitulo := aDados[_ni,8]
                 SE2->(dbGoto(nRecTitulo))
 
-                cFilDest := MV_PAR02
-                cCliFor := SE2->E2_FORNECE
-                cLojCliFor := SE2->E2_LOJA
+                TrocaFilial(cCNPJDest)
 
-                nRecTransf := TranfSE2(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
-                If nRecTransf > 0
-                    If cFilDest <> cFilAnt
-                        cCNPJ := Alltrim(POSICIONE("SM0",1,cEmpAnt+cFilDest,"M0_CGC" ))
-                        TrocaFilial(cCNPJ)
-                    Endif
-                    If cFilDest == cFilAnt
-                        //Aprova a Transf
-                        U_AMBFIN02("SE6",nRecTransf,4)
+                aPergs := {}
+
+                aAdd(aPergs ,{1,"Cod. Fornecedor: ", Space(8) , PesqPict("SA2","A2_COD"), '', 'SA2', '.T.', 60, .T.})
+                aAdd(aPergs ,{1,"Loja: ", Space(4) , PesqPict("SA2","A2_COD"), '', '', '.T.', 60, .T.})
+
+                lCanSave := .F.
+                lUserSave := .T.
+                If ParamBox(aPergs, "Cliente Destino para o Titulo "+Alltrim(SE2->E2_NUM),,,,,,,,, lCanSave, lUserSave)
+                    
+                    TrocaFilial(cCNPJOrig)
+
+                    cCliFor := MV_PAR01
+                    cLojCliFor := MV_PAR02
+                    nRecTransf := TranfSE2(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
+                    If nRecTransf > 0
+                        If cFilDest <> cFilAnt
+                            TrocaFilial(cCNPJDest)
+                        Endif
+                        If cFilDest == cFilAnt
+                            //Aprova a Transf
+                            U_AMBFIN02("SE6",nRecTransf,4)
+                        Else 
+                            MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
+                        Endif
                     Else 
-                        MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
+                        MsgAlert("Erro ao transferir titulo "+Alltrim(SE2->E2_NUM))
                     Endif
-                Else 
-                    MsgAlert("Erro ao transferir titulo "+Alltrim(SE2->E2_NUM))
                 Endif
             Else 
                 //Cta a Receber
                 nRecTitulo := aDados[_ni,8]
                 SE1->(dbGoto(nRecTitulo))
 
-                cFilDest := MV_PAR02
-                cCliFor := SE1->E1_CLIENTE
-                cLojCliFor := SE1->E1_LOJA
+                TrocaFilial(cCNPJDest)
 
-                nRecTransf := TranfSE1(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
-                If nRecTransf > 0
-                    If cFilDest <> cFilAnt
-                        cCNPJ := Alltrim(POSICIONE("SM0",1,cEmpAnt+cFilDest,"M0_CGC" ))
-                        TrocaFilial(cCNPJ)
-                    Endif
-                    If cFilDest == cFilAnt
-                        SE6->(dbGoto(nRecTransf))
-                        //Aprova a Transf
-                        U_AMBFIN03("SE6",nRecTransf,4)
+                aPergs := {}
+
+                aAdd(aPergs ,{1,"Cod. Cliente: ", Space(8) , PesqPict("SA1","A1_COD"), '', 'SA1', '.T.', 60, .T.})
+                aAdd(aPergs ,{1,"Loja: ", Space(4) , PesqPict("SA1","A1_LOJA"), '', '', '.T.', 60, .T.})
+
+                lCanSave := .F.
+                lUserSave := .T.
+                If ParamBox(aPergs, "Cliente Destino para o Titulo "+Alltrim(SE1->E1_NUM),,,,,,,,, lCanSave, lUserSave)
+                    
+                    TrocaFilial(cCNPJOrig)
+
+                    cCliFor := MV_PAR01
+                    cLojCliFor := MV_PAR02
+                    nRecTransf := TranfSE1(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
+                    If nRecTransf > 0
+                        If cFilDest <> cFilAnt
+                            TrocaFilial(cCNPJDest)
+                        Endif
+                        If cFilDest == cFilAnt
+                            SE6->(dbGoto(nRecTransf))
+                            //Aprova a Transf
+                            U_AMBFIN03("SE6",nRecTransf,4)
+                        Else 
+                            MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
+                        Endif
                     Else 
-                        MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
+                        MsgAlert("Erro ao transferir titulo "+Alltrim(SE1->E1_NUM))
                     Endif
-                Else 
-                    MsgAlert("Erro ao transferir titulo "+Alltrim(SE1->E1_NUM))
                 Endif
             Endif
 
@@ -179,7 +213,7 @@ Static function TranfSE1(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
  
     Private lMsErroAuto := .F.
  
-    SE2->(dbGoto(nRecTitulo))
+    SE1->(dbGoto(nRecTitulo))
  
     aadd(aCab, {"E6_FILDEB",cFilDest})
     aadd(aCab, {"E6_CLIENTE",cCliFor})

@@ -37,7 +37,13 @@ User Function AMBFIN02(cAlias,nReg,nOpc)
 
     SE6->(dbGoto(nReg))
 
-    XFa631Apv(cAlias,nReg,nOpc)
+    lRet := XFa631Apv(cAlias,nReg,nOpc)
+	If !lRet
+		SE6->(dbGoto(nReg))
+		RecLock("SE6",.F.)
+		SE6->E6_SITSOL := "1"
+		SE6->(MsUnlock())
+	Endif
 
 Return
 
@@ -64,7 +70,7 @@ Local nY 			:= 0
 Local cParcela		:= Space(TamSx3("E2_PARCELA")[1])
 Local lSolicAb		:= .T. //(mv_par01==1)	// Apenas solicitacoes em aberto
 Local lDtMovFin 	:= .T.
-Local lRet			:= .F.
+Local lRet			:= .T.
 Local cTipo 		:= ""
 Local nValBx		:= 0
 Local cParcRec		:= Space(TamSx3("E2_PARCELA")[1])
