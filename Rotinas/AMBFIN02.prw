@@ -456,14 +456,14 @@ If nOpcA == 1
 								F631SemImp(@aTit) 
 								aTit[nX][2] := fNatTrf(SE6->E6_FILDEB)
 								If Empty(aTit[nX][2])
-									aTit[nX][2] := GetNewPar("ZZ_NATTRF","10907") //fNatNTrf(cFilAnt, aTit)
+									aTit[nX][2] := fNatNTrf(cFilAnt, aTit)
 								Endif	
 							Else
 								aTit[nX][2] := SE2->E2_NATUREZ
 							EndIf
 						Else //MV_IMPTRAN = 2
 							If !Empty(FWFilial("SED"))
-								aTit[nX][2] := GetNewPar("ZZ_NATTRF","10907") //fNatNTrf(cFilAnt, aTit)
+								aTit[nX][2] := fNatNTrf(cFilAnt, aTit)
 							Else
 								aTit[nX][2] := SE2->E2_NATUREZ
 							Endif
