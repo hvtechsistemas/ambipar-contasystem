@@ -126,16 +126,14 @@ Static Function ProcTransf(aDados,nOpc)
                 nRecTitulo := aDados[_ni,8]
                 SE2->(dbGoto(nRecTitulo))
 
+                cCNPJCli := Posicione("SA2", 1, FWxFilial("SA2") + SE2->E2_FORNECE + SE2->E2_LOJA, "A2_CGC")
+
                 TrocaFilial(cCNPJDest)
 
-                aPergs := {}
+                cCliFor  := POSICIONE("SA2",3,xFilial("SA2") + cCNPJCli, "A2_COD")
+                cLojCliFor  := POSICIONE("SA2",3,xFilial("SA2") + cCNPJCli, "A2_LOJA")
 
-                aAdd(aPergs ,{1,"Cod. Fornecedor: ", Space(8) , PesqPict("SA2","A2_COD"), '', 'SA2', '.T.', 60, .T.})
-                aAdd(aPergs ,{1,"Loja: ", Space(4) , PesqPict("SA2","A2_COD"), '', '', '.T.', 60, .T.})
-
-                lCanSave := .F.
-                lUserSave := .T.
-                If ParamBox(aPergs, "Cliente Destino para o Titulo "+Alltrim(SE2->E2_NUM),,,,,,,,, lCanSave, lUserSave)
+                If !Empty(cCliFor) .AND. !Empty(cLojCliFor)
                     
                     TrocaFilial(cCNPJOrig)
 
@@ -155,27 +153,25 @@ Static Function ProcTransf(aDados,nOpc)
                     Else 
                         MsgAlert("Erro ao transferir titulo "+Alltrim(SE2->E2_NUM))
                     Endif
+                Else 
+                    MsgAlert("Codigo e Loja do fornecedor do titulo "+Alltrim(SE1->E1_NUM)+" não encontrado na filial de destino !")
                 Endif
             Else 
                 //Cta a Receber
                 nRecTitulo := aDados[_ni,8]
                 SE1->(dbGoto(nRecTitulo))
 
+                cCNPJCli := Posicione("SA1", 1, FWxFilial("SA1") + SE1->E1_CLIENTE + SE1->E1_LOJA, "A1_CGC")
+
                 TrocaFilial(cCNPJDest)
 
-                aPergs := {}
+                cCliFor  := POSICIONE("SA1",3,xFilial("SA1") + cCNPJCli, "A1_COD")
+                cLojCliFor  := POSICIONE("SA1",3,xFilial("SA1") + cCNPJCli, "A1_LOJA")
 
-                aAdd(aPergs ,{1,"Cod. Cliente: ", Space(8) , PesqPict("SA1","A1_COD"), '', 'SA1', '.T.', 60, .T.})
-                aAdd(aPergs ,{1,"Loja: ", Space(4) , PesqPict("SA1","A1_LOJA"), '', '', '.T.', 60, .T.})
-
-                lCanSave := .F.
-                lUserSave := .T.
-                If ParamBox(aPergs, "Cliente Destino para o Titulo "+Alltrim(SE1->E1_NUM),,,,,,,,, lCanSave, lUserSave)
+                If !Empty(cCliFor) .AND. !Empty(cLojCliFor)
                     
                     TrocaFilial(cCNPJOrig)
 
-                    cCliFor := MV_PAR01
-                    cLojCliFor := MV_PAR02
                     nRecTransf := TranfSE1(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
                     If nRecTransf > 0
                         If cFilDest <> cFilAnt
@@ -191,6 +187,8 @@ Static Function ProcTransf(aDados,nOpc)
                     Else 
                         MsgAlert("Erro ao transferir titulo "+Alltrim(SE1->E1_NUM))
                     Endif
+                Else 
+                    MsgAlert("Codigo e Loja do cliente do titulo "+Alltrim(SE1->E1_NUM)+" não encontrado na filial de destino !")
                 Endif
             Endif
 

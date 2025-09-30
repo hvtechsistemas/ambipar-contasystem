@@ -452,21 +452,21 @@ If nOpcA == 1
 					If nX > 0
 						
 						If !lImp //MV_IMPTRAN = 1
-							If !(AllTrim(cTipo) $ MVTAXA+"/"+MVINSS+"/"+MVISS+"/"+MVTXA+"/"+"SES"+"/"+"INA")
-								F631SemImp(@aTit) 
-								aTit[nX][2] := fNatTrf(SE6->E6_FILDEB)
-								If Empty(aTit[nX][2])
-									aTit[nX][2] := fNatNTrf(cFilAnt, aTit)
-								Endif	
-							Else
+							//If !(AllTrim(cTipo) $ MVTAXA+"/"+MVINSS+"/"+MVISS+"/"+MVTXA+"/"+"SES"+"/"+"INA")
+								//F631SemImp(@aTit) 
+								//aTit[nX][2] := fNatTrf(SE6->E6_FILDEB)
+								//If Empty(aTit[nX][2])
+									//aTit[nX][2] := fNatNTrf(cFilAnt, aTit)
+								//Endif	
+							//Else
 								aTit[nX][2] := SE2->E2_NATUREZ
-							EndIf
+							//EndIf
 						Else //MV_IMPTRAN = 2
-							If !Empty(FWFilial("SED"))
-								aTit[nX][2] := fNatNTrf(cFilAnt, aTit)
-							Else
+							//If !Empty(FWFilial("SED"))
+								//aTit[nX][2] := fNatNTrf(cFilAnt, aTit)
+							//Else
 								aTit[nX][2] := SE2->E2_NATUREZ
-							Endif
+							//Endif
 
 							//Exibe mensagem ao usuário indicando que o título possui vinculo com o REINF na filial de origem
 							If __lReinf .And. !IsBlind()

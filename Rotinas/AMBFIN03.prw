@@ -244,7 +244,7 @@ Static Function XFa630Apv(cAlias,nReg,nOpc)
 						If aScan(aChaves,{|x| x == FieldName(nX) }) == 0
 							AADD(aTit, { SE1->(FieldName(nX)), SE1->(FieldGet(nX)), NIL } )
 							If aTit[nX][1] == "E1_NATUREZ" .And. lCompSED .And. !lF630Auto
-								aTit[nX][2] := ConfigSED(aTit[nX][2])
+								aTit[nX][2] := SE1->E1_NATUREZ //ConfigSED(aTit[nX][2])
 							EndIf
 						EndIf
 					Next
