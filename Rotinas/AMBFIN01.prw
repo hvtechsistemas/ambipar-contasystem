@@ -129,70 +129,48 @@ Static Function ProcTransf(aDados,nOpc)
                 nRecTitulo := aDados[_ni,8]
                 SE2->(dbGoto(nRecTitulo))
 
-                cCNPJCli := Posicione("SA2", 1, FWxFilial("SA2") + SE2->E2_FORNECE + SE2->E2_LOJA, "A2_CGC")
+                cCliFor := SE2->E2_FORNECE
+                cLojCliFor := SE2->E2_LOJA
 
-                TrocaFilial(cCNPJDest)
-
-                cCliFor  := POSICIONE("SA2",3,xFilial("SA2") + cCNPJCli, "A2_COD")
-                cLojCliFor  := POSICIONE("SA2",3,xFilial("SA2") + cCNPJCli, "A2_LOJA")
-
-                If !Empty(cCliFor) .AND. !Empty(cLojCliFor)
-                    
-                    TrocaFilial(cCNPJOrig)
-
-                    cCliFor := MV_PAR01
-                    cLojCliFor := MV_PAR02
-                    nRecTransf := TranfSE2(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
-                    If nRecTransf > 0
-                        If cFilDest <> cFilAnt
-                            TrocaFilial(cCNPJDest)
-                        Endif
-                        If cFilDest == cFilAnt
-                            //Aprova a Transf
-                            U_AMBFIN02("SE6",nRecTransf,4)
-                        Else 
-                            MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
-                        Endif
+                nRecTransf := TranfSE2(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
+                If nRecTransf > 0
+                    If cFilDest <> cFilAnt
+                        TrocaFilial(cCNPJDest)
+                    Endif
+                    If cFilDest == cFilAnt
+                        //Aprova a Transf
+                        U_AMBFIN02("SE6",nRecTransf,4)
                     Else 
-                        MsgAlert("Erro ao transferir titulo "+Alltrim(SE2->E2_NUM))
+                        MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
                     Endif
                 Else 
-                    MsgAlert("Codigo e Loja do fornecedor do titulo "+Alltrim(SE1->E1_NUM)+" não encontrado na filial de destino !")
+                    MsgAlert("Erro ao transferir titulo "+Alltrim(SE2->E2_NUM))
                 Endif
+                
             Else 
                 //Cta a Receber
                 nRecTitulo := aDados[_ni,8]
                 SE1->(dbGoto(nRecTitulo))
 
-                //cCNPJCli := Posicione("SA1", 1, FWxFilial("SA1") + SE1->E1_CLIENTE + SE1->E1_LOJA, "A1_CGC")
+                cCliFor  := SE1->E1_CLIENTE 
+                cLojCliFor  :=  SE1->E1_LOJA 
 
-                //TrocaFilial(cCNPJDest)
-
-                cCliFor  := SE1->E1_CLIENTE //POSICIONE("SA1",3,xFilial("SA1") + cCNPJCli, "A1_COD")
-                cLojCliFor  :=  SE1->E1_LOJA //POSICIONE("SA1",3,xFilial("SA1") + cCNPJCli, "A1_LOJA")
-
-                //If !Empty(cCliFor) .AND. !Empty(cLojCliFor)
-                    
-                    //TrocaFilial(cCNPJOrig)
-
-                    nRecTransf := TranfSE1(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
-                    If nRecTransf > 0
-                        If cFilDest <> cFilAnt
-                            TrocaFilial(cCNPJDest)
-                        Endif
-                        If cFilDest == cFilAnt
-                            SE6->(dbGoto(nRecTransf))
-                            //Aprova a Transf
-                            U_AMBFIN03("SE6",nRecTransf,4)
-                        Else 
-                            MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
-                        Endif
-                    Else 
-                        MsgAlert("Erro ao transferir titulo "+Alltrim(SE1->E1_NUM))
+                nRecTransf := TranfSE1(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
+                If nRecTransf > 0
+                    If cFilDest <> cFilAnt
+                        TrocaFilial(cCNPJDest)
                     Endif
-                //Else 
-                    //MsgAlert("Codigo e Loja do cliente do titulo "+Alltrim(SE1->E1_NUM)+" não encontrado na filial de destino !")
-                //Endif
+                    If cFilDest == cFilAnt
+                        SE6->(dbGoto(nRecTransf))
+                        //Aprova a Transf
+                        U_AMBFIN03("SE6",nRecTransf,4)
+                    Else 
+                        MsgAlert("Erro ao abrir ambiente na filial de destino: "+Alltrim(cFilDest))
+                    Endif
+                Else 
+                    MsgAlert("Erro ao transferir titulo "+Alltrim(SE1->E1_NUM))
+                Endif
+                
             Endif
 
 		Endif
@@ -291,7 +269,7 @@ Static Function GetDadosTitulos(nOpc)
         cQry += " AND SE2.E2_NUM<='"+MV_PAR04+"'" 
         cQry += " AND SE2.E2_EMISSAO>='"+DTOS(MV_PAR05)+"'" 
         cQry += " AND SE2.E2_EMISSAO<='"+DTOS(MV_PAR06)+"'"
-        cQry += " AND SE2.E2_BAIXA=' '" 
+        cQry += " AND SE2.E2_SALDO>0" 
         cQry += " AND SE2.E2_TIPO<>'PA'" 
 
         TcQuery cQry New Alias &cAlias
@@ -314,7 +292,7 @@ Static Function GetDadosTitulos(nOpc)
         cLstCart := FN022LSTCB(1)
 
         //SE1
-        cQry := " SELECT SE1.E1_FILIAL,SE1.R_E_C_N_O_ AS RECSE1,SE1.E1_NUM,SE1.E1_PREFIXO,SE1.E1_CLIENTE,SE1.E1_LOJA,SE1.E1_VALOR,SE1.E1_PARCELA "
+        cQry := " SELECT SE1.E1_FILIAL,SE1.R_E_C_N_O_ AS RECSE1,SE1.E1_NUM,SE1.E1_PREFIXO,SE1.E1_CLIENTE,SE1.E1_LOJA,SE1.E1_VALOR,SE1.E1_PARCELA,SE1.E1_TIPO "
         cQry += " FROM "+RetSqlName("SE1")+" SE1"
         cQry += " WHERE SE1.D_E_L_E_T_ = ' ' "
         cQry += " AND SE1.E1_FILIAL='"+MV_PAR01+"'" 
@@ -323,7 +301,7 @@ Static Function GetDadosTitulos(nOpc)
         cQry += " AND SE1.E1_EMISSAO>='"+DTOS(MV_PAR05)+"'" 
         cQry += " AND SE1.E1_EMISSAO<='"+DTOS(MV_PAR06)+"'"
         cQry += " AND SE1.E1_SITUACA IN "+StrTran(FormatIn(cLstCart,"|"),",''","")+""
-        cQry += " AND SE1.E1_BAIXA=' '" 
+        cQry += " AND SE1.E1_SALDO>0"
         cQry += " AND SE1.E1_NUMSOL=' '"
         cQry += " AND SE1.E1_TIPO<>'RA'"
 
@@ -334,10 +312,12 @@ Static Function GetDadosTitulos(nOpc)
         If !(cAlias)->(EOF()) .AND. !(cAlias)->(BOF())
             While   !(cAlias)->(EoF())
 
-                cValor := 'R$ '+ TRANSFORM(Val(Alltrim(Str((cAlias)->E1_VALOR))),"@E 999,999,999.99")
+                lTipoOK := ((cAlias)->E1_TIPO $ MVIRABT+"/"+MVCSABT+"/"+MVCFABT+"/"+MVPIABT+"/"+MVABATIM)
+                If !lTipoOK
+                    cValor := 'R$ '+ TRANSFORM(Val(Alltrim(Str((cAlias)->E1_VALOR))),"@E 999,999,999.99")
+                    AADD(aTitulos,{.F.,(cAlias)->E1_FILIAL,(cAlias)->E1_NUM,(cAlias)->E1_PREFIXO,(cAlias)->E1_CLIENTE,(cAlias)->E1_LOJA,cValor,(cAlias)->RECSE1,(cAlias)->E1_PARCELA})
+                Endif 
 
-                AADD(aTitulos,{.F.,(cAlias)->E1_FILIAL,(cAlias)->E1_NUM,(cAlias)->E1_PREFIXO,(cAlias)->E1_CLIENTE,(cAlias)->E1_LOJA,cValor,(cAlias)->RECSE1,(cAlias)->E1_PARCELA})
-            
                 (cAlias)->(DBSkip())
             EndDo
         Endif  

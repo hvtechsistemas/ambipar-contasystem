@@ -385,7 +385,7 @@ Static Function XFa630Apv(cAlias,nReg,nOpc)
 							Else
 								AADD(aTit , {"AUTHIST"		, "Transferencia entre filial",NIL}) //"Bx. p/transf. da filial "###" p/"
 							EndIf
-							AADD(aTit , {"AUTVALREC"	, nSaldo				, NIL })
+							AADD(aTit , {"AUTVALREC"	, SE1->E1_SALDO				, NIL })
 							//旼컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴커
 							//쿐xecuta a Baixa do Titulo                                         �
 							//읕컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴켸
