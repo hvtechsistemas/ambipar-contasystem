@@ -58,6 +58,9 @@ User Function AMBFIN01(nOpc)
         cCNPJOrig := Alltrim(POSICIONE("SM0",1,cEmpAnt+MV_PAR01,"M0_CGC" ))
         cCNPJDest := Alltrim(POSICIONE("SM0",1,cEmpAnt+MV_PAR02,"M0_CGC" ))
         If !Empty(cCNPJOrig) .AND. !Empty(cCNPJDest)
+            If cFilOrig <> cFilAnt
+                TrocaFilial(cCNPJOrig)
+            Endif
             GetDadosTitulos(nOpc)
             If Len(aTitulos) > 0
                 BrowseSelecTitulo(nOpc)
@@ -161,16 +164,16 @@ Static Function ProcTransf(aDados,nOpc)
                 nRecTitulo := aDados[_ni,8]
                 SE1->(dbGoto(nRecTitulo))
 
-                cCNPJCli := Posicione("SA1", 1, FWxFilial("SA1") + SE1->E1_CLIENTE + SE1->E1_LOJA, "A1_CGC")
+                //cCNPJCli := Posicione("SA1", 1, FWxFilial("SA1") + SE1->E1_CLIENTE + SE1->E1_LOJA, "A1_CGC")
 
-                TrocaFilial(cCNPJDest)
+                //TrocaFilial(cCNPJDest)
 
-                cCliFor  := POSICIONE("SA1",3,xFilial("SA1") + cCNPJCli, "A1_COD")
-                cLojCliFor  := POSICIONE("SA1",3,xFilial("SA1") + cCNPJCli, "A1_LOJA")
+                cCliFor  := SE1->E1_CLIENTE //POSICIONE("SA1",3,xFilial("SA1") + cCNPJCli, "A1_COD")
+                cLojCliFor  :=  SE1->E1_LOJA //POSICIONE("SA1",3,xFilial("SA1") + cCNPJCli, "A1_LOJA")
 
-                If !Empty(cCliFor) .AND. !Empty(cLojCliFor)
+                //If !Empty(cCliFor) .AND. !Empty(cLojCliFor)
                     
-                    TrocaFilial(cCNPJOrig)
+                    //TrocaFilial(cCNPJOrig)
 
                     nRecTransf := TranfSE1(nRecTitulo,cFilDest,cCliFor,cLojCliFor)
                     If nRecTransf > 0
@@ -187,9 +190,9 @@ Static Function ProcTransf(aDados,nOpc)
                     Else 
                         MsgAlert("Erro ao transferir titulo "+Alltrim(SE1->E1_NUM))
                     Endif
-                Else 
-                    MsgAlert("Codigo e Loja do cliente do titulo "+Alltrim(SE1->E1_NUM)+" não encontrado na filial de destino !")
-                Endif
+                //Else 
+                    //MsgAlert("Codigo e Loja do cliente do titulo "+Alltrim(SE1->E1_NUM)+" não encontrado na filial de destino !")
+                //Endif
             Endif
 
 		Endif
@@ -308,6 +311,8 @@ Static Function GetDadosTitulos(nOpc)
         (cAlias)->(DBCloseArea())
 
     Else
+        cLstCart := FN022LSTCB(1)
+
         //SE1
         cQry := " SELECT SE1.E1_FILIAL,SE1.R_E_C_N_O_ AS RECSE1,SE1.E1_NUM,SE1.E1_PREFIXO,SE1.E1_CLIENTE,SE1.E1_LOJA,SE1.E1_VALOR,SE1.E1_PARCELA "
         cQry += " FROM "+RetSqlName("SE1")+" SE1"
@@ -317,7 +322,9 @@ Static Function GetDadosTitulos(nOpc)
         cQry += " AND SE1.E1_NUM<='"+MV_PAR04+"'" 
         cQry += " AND SE1.E1_EMISSAO>='"+DTOS(MV_PAR05)+"'" 
         cQry += " AND SE1.E1_EMISSAO<='"+DTOS(MV_PAR06)+"'"
+        cQry += " AND SE1.E1_SITUACA IN "+StrTran(FormatIn(cLstCart,"|"),",''","")+""
         cQry += " AND SE1.E1_BAIXA=' '" 
+        cQry += " AND SE1.E1_NUMSOL=' '"
         cQry += " AND SE1.E1_TIPO<>'RA'"
 
         TcQuery cQry New Alias &cAlias
